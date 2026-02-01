@@ -61,6 +61,7 @@ npm run dev
 - **Database**: PostgreSQL 14+
 
 ## Recent Updates
+- Fixed frontend/backend parameter alignment (keyword_ids, search, start_date, end_date, limit)
 - Added Export Modal (SCR-03) with filter chips, 429/500 error handling
 - Added keyword highlighting in matched domain names
 - Added truncated fingerprint column (hover for full hash)
