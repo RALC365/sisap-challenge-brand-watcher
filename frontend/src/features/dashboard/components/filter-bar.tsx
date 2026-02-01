@@ -64,7 +64,7 @@ export function FilterBar({ keywords, filters, onFiltersChange, isLoading }: Fil
 
   return (
     <div className="card mb-6">
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col xl:flex-row gap-4">
         <div className="flex-1 min-w-0">
           <label className="label">Keywords</label>
           <div className="flex flex-wrap gap-2 min-h-[38px] p-2 border border-gray-200 rounded-md bg-white">
@@ -89,7 +89,7 @@ export function FilterBar({ keywords, filters, onFiltersChange, isLoading }: Fil
           </div>
         </div>
 
-        <div className="w-full lg:w-64">
+        <div className="shrink-0">
           <DateRange
             label="Date Range"
             startDate={filters.start_date}
@@ -99,16 +99,16 @@ export function FilterBar({ keywords, filters, onFiltersChange, isLoading }: Fil
           />
         </div>
 
-        <div className="w-full lg:w-48">
+        <div className="w-full xl:w-40 shrink-0">
           <Input
             label="Search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Search domains..."
+            placeholder="Search..."
           />
         </div>
 
-        <div className="flex items-end gap-4">
+        <div className="flex items-end gap-3 shrink-0">
           <div className="pb-2">
             <Toggle
               label="New only"
@@ -120,7 +120,7 @@ export function FilterBar({ keywords, filters, onFiltersChange, isLoading }: Fil
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="text-sm text-primary hover:text-blue-700 pb-2"
+              className="text-sm text-primary hover:text-blue-700 pb-2 whitespace-nowrap"
             >
               Clear filters
             </button>
