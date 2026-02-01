@@ -1,12 +1,32 @@
 package keywords
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type KeywordStatus string
 
 const (
 	KeywordStatusActive   KeywordStatus = "active"
 	KeywordStatusInactive KeywordStatus = "inactive"
+)
+
+var (
+	ErrMissingValue     = errors.New("value is required")
+	ErrEmptyValue       = errors.New("value cannot be empty after trimming")
+	ErrValueTooLong     = errors.New("value must be between 1 and 64 characters")
+	ErrInvalidKeywordID = errors.New("keyword_id must be a valid UUID")
+	ErrKeywordNotFound  = errors.New("keyword not found")
+	ErrDuplicateKeyword = errors.New("keyword already exists")
+)
+
+const (
+	ErrorCodeValidation      = "VALIDATION_ERROR"
+	ErrorCodeDuplicate       = "DUPLICATE_KEYWORD"
+	ErrorCodeNotFound        = "NOT_FOUND"
+	ErrorCodeInvalidPathParam = "INVALID_PATH_PARAM"
+	ErrorCodeDBError         = "DB_ERROR"
 )
 
 type Keyword struct {
@@ -31,17 +51,4 @@ type ListQuery struct {
 	Q        string
 	Page     int
 	PageSize int
-}
-
-type ListResponse struct {
-	Items []Keyword `json:"items"`
-	Total int       `json:"total"`
-}
-
-type CreateRequest struct {
-	Value string `json:"value"`
-}
-
-type DeleteResponse struct {
-	OK bool `json:"ok"`
 }

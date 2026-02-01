@@ -33,7 +33,10 @@ func (h *Handler) List(c *gin.Context) {
 	if pageStr := c.Query("page"); pageStr != "" {
 		page, err := strconv.Atoi(pageStr)
 		if err != nil || page < 1 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_QUERY", "message": "page must be a positive integer"})
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error:   ErrorCodeValidation,
+				Message: "page must be a positive integer",
+			})
 			return
 		}
 		query.Page = page
@@ -44,7 +47,10 @@ func (h *Handler) List(c *gin.Context) {
 	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
 		pageSize, err := strconv.Atoi(pageSizeStr)
 		if err != nil || (pageSize != 10 && pageSize != 25 && pageSize != 50) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_QUERY", "message": "page_size must be 10, 25, or 50"})
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error:   ErrorCodeValidation,
+				Message: "page_size must be 10, 25, or 50",
+			})
 			return
 		}
 		query.PageSize = pageSize
@@ -54,7 +60,7 @@ func (h *Handler) List(c *gin.Context) {
 
 	response, err := h.service.List(c.Request.Context(), query)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB_ERROR"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: ErrorCodeDBError})
 		return
 	}
 
@@ -62,23 +68,36 @@ func (h *Handler) List(c *gin.Context) {
 }
 
 func (h *Handler) Create(c *gin.Context) {
-	var req CreateRequest
+	var req CreateKeywordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "VALIDATION_ERROR", "message": "value is required and must be a string"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   ErrorCodeValidation,
+			Message: "value is required and must be a string (1-64 characters)",
+		})
 		return
 	}
 
 	keyword, err := h.service.Create(c.Request.Context(), req)
 	if err != nil {
-		if errors.Is(err, ErrEmptyValue) || errors.Is(err, ErrValueTooLong) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "VALIDATION_ERROR", "message": err.Error()})
+		if errors.Is(err, ErrEmptyValue) {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error:   ErrorCodeValidation,
+				Message: err.Error(),
+			})
+			return
+		}
+		if errors.Is(err, ErrValueTooLong) {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error:   ErrorCodeValidation,
+				Message: err.Error(),
+			})
 			return
 		}
 		if errors.Is(err, ErrDuplicateKeyword) {
-			c.JSON(http.StatusConflict, gin.H{"error": "DUPLICATE_KEYWORD"})
+			c.JSON(http.StatusConflict, ErrorResponse{Error: ErrorCodeDuplicate})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB_ERROR"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: ErrorCodeDBError})
 		return
 	}
 
@@ -88,19 +107,29 @@ func (h *Handler) Create(c *gin.Context) {
 func (h *Handler) Delete(c *gin.Context) {
 	keywordID := c.Param("keyword_id")
 	if keywordID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_PATH_PARAM", "message": "keyword_id is required"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   ErrorCodeInvalidPathParam,
+			Message: "keyword_id is required",
+		})
 		return
 	}
 
 	err := h.service.Delete(c.Request.Context(), keywordID)
 	if err != nil {
-		if errors.Is(err, ErrKeywordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "NOT_FOUND"})
+		if errors.Is(err, ErrInvalidKeywordID) {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Error:   ErrorCodeInvalidPathParam,
+				Message: "keyword_id must be a valid UUID",
+			})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB_ERROR"})
+		if errors.Is(err, ErrKeywordNotFound) {
+			c.JSON(http.StatusNotFound, ErrorResponse{Error: ErrorCodeNotFound})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: ErrorCodeDBError})
 		return
 	}
 
-	c.JSON(http.StatusOK, DeleteResponse{OK: true})
+	c.JSON(http.StatusOK, DeleteKeywordResponse{OK: true})
 }

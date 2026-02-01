@@ -11,8 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var ErrDuplicateKeyword = errors.New("duplicate keyword")
-
 type Repository struct {
 	pool *pgxpool.Pool
 }
@@ -29,10 +27,10 @@ func (r *Repository) List(ctx context.Context, query ListQuery) ([]KeywordRow, i
 	argIndex := 1
 
 	if query.Q != "" {
-		filter := fmt.Sprintf(" AND keyword ILIKE $%d", argIndex)
+		filter := fmt.Sprintf(" AND normalized_value ILIKE $%d", argIndex)
 		countQuery += filter
 		listQuery += filter
-		args = append(args, "%"+query.Q+"%")
+		args = append(args, "%"+strings.ToLower(query.Q)+"%")
 		argIndex++
 	}
 
@@ -42,7 +40,7 @@ func (r *Repository) List(ctx context.Context, query ListQuery) ([]KeywordRow, i
 		return nil, 0, err
 	}
 
-	listQuery += " ORDER BY created_at DESC"
+	listQuery += " ORDER BY id DESC"
 	offset := (query.Page - 1) * query.PageSize
 	listQuery += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
 	args = append(args, query.PageSize, offset)
@@ -84,33 +82,20 @@ func (r *Repository) Create(ctx context.Context, value, normalizedValue string) 
 	return row, nil
 }
 
-func (r *Repository) GetByID(ctx context.Context, id string) (*KeywordRow, error) {
-	row := &KeywordRow{}
-	err := r.pool.QueryRow(ctx, `
-		SELECT id, keyword, normalized_value, status, is_deleted, created_at, updated_at
-		FROM keywords
-		WHERE id = $1 AND is_deleted = FALSE
-	`, id).Scan(&row.ID, &row.Keyword, &row.NormalizedValue, &row.Status, &row.IsDeleted, &row.CreatedAt, &row.UpdatedAt)
-
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return row, nil
-}
-
-func (r *Repository) SoftDelete(ctx context.Context, id string) error {
-	_, err := r.pool.Exec(ctx, `
+func (r *Repository) SoftDelete(ctx context.Context, id string) (int64, error) {
+	result, err := r.pool.Exec(ctx, `
 		UPDATE keywords
 		SET status = 'inactive', is_deleted = TRUE, deleted_at = NOW()
-		WHERE id = $1
+		WHERE id = $1 AND is_deleted = FALSE
 	`, id)
-	return err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 func NormalizeValue(value string) string {
 	return strings.ToLower(strings.TrimSpace(value))
 }
+
+var _ = pgx.ErrNoRows

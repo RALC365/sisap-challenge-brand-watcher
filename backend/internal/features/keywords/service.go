@@ -2,15 +2,9 @@ package keywords
 
 import (
 	"context"
-	"errors"
 	"strings"
-)
 
-var (
-	ErrMissingValue    = errors.New("value is required")
-	ErrEmptyValue      = errors.New("value cannot be empty")
-	ErrValueTooLong    = errors.New("value must be between 1 and 64 characters")
-	ErrKeywordNotFound = errors.New("keyword not found")
+	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -21,7 +15,7 @@ func NewService(repo *Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) List(ctx context.Context, query ListQuery) (*ListResponse, error) {
+func (s *Service) List(ctx context.Context, query ListQuery) (*ListKeywordsResponse, error) {
 	if query.Page < 1 {
 		query.Page = 1
 	}
@@ -34,24 +28,24 @@ func (s *Service) List(ctx context.Context, query ListQuery) (*ListResponse, err
 		return nil, err
 	}
 
-	items := make([]Keyword, len(rows))
+	items := make([]KeywordItem, len(rows))
 	for i, row := range rows {
-		items[i] = Keyword{
-			ID:              row.ID,
+		items[i] = KeywordItem{
+			KeywordID:       row.ID,
 			Value:           row.Keyword,
 			NormalizedValue: row.NormalizedValue,
-			Status:          KeywordStatus(row.Status),
-			CreatedAt:       row.CreatedAt,
+			Status:          row.Status,
+			CreatedAt:       row.CreatedAt.Format("2006-01-02T15:04:05.999999Z07:00"),
 		}
 	}
 
-	return &ListResponse{
+	return &ListKeywordsResponse{
 		Items: items,
 		Total: total,
 	}, nil
 }
 
-func (s *Service) Create(ctx context.Context, req CreateRequest) (*Keyword, error) {
+func (s *Service) Create(ctx context.Context, req CreateKeywordRequest) (*Keyword, error) {
 	value := strings.TrimSpace(req.Value)
 	if value == "" {
 		return nil, ErrEmptyValue
@@ -64,9 +58,6 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*Keyword, erro
 
 	row, err := s.repo.Create(ctx, value, normalizedValue)
 	if err != nil {
-		if errors.Is(err, ErrDuplicateKeyword) {
-			return nil, ErrDuplicateKeyword
-		}
 		return nil, err
 	}
 
@@ -79,14 +70,19 @@ func (s *Service) Create(ctx context.Context, req CreateRequest) (*Keyword, erro
 	}, nil
 }
 
-func (s *Service) Delete(ctx context.Context, id string) error {
-	existing, err := s.repo.GetByID(ctx, id)
+func (s *Service) Delete(ctx context.Context, keywordID string) error {
+	if _, err := uuid.Parse(keywordID); err != nil {
+		return ErrInvalidKeywordID
+	}
+
+	rowsAffected, err := s.repo.SoftDelete(ctx, keywordID)
 	if err != nil {
 		return err
 	}
-	if existing == nil {
+
+	if rowsAffected == 0 {
 		return ErrKeywordNotFound
 	}
 
-	return s.repo.SoftDelete(ctx, id)
+	return nil
 }
