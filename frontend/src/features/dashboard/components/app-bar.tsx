@@ -6,7 +6,6 @@ interface AppBarProps {
   status: MonitorStatus | undefined;
   isLoading: boolean;
   onExport: () => void;
-  isExporting?: boolean;
 }
 
 function formatLastRun(dateString: string | null): string {
@@ -25,7 +24,7 @@ function formatLastRun(dateString: string | null): string {
   return date.toLocaleDateString();
 }
 
-export function AppBar({ status, isLoading, onExport, isExporting }: AppBarProps) {
+export function AppBar({ status, isLoading, onExport }: AppBarProps) {
   return (
     <header className="sticky top-0 z-20 bg-surface-card shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -49,7 +48,6 @@ export function AppBar({ status, isLoading, onExport, isExporting }: AppBarProps
             )}
             <Button
               onClick={onExport}
-              isLoading={isExporting}
               variant="primary"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

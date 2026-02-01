@@ -8,7 +8,7 @@ import { MetricCards } from './components/metric-cards';
 import { FilterBar, type FilterState } from './components/filter-bar';
 import { MatchesTable } from './components/matches-table';
 import { EmptyNoKeywords, EmptyNoMatches } from './components/empty-states';
-import api from '@/lib/axios';
+import { ExportModal } from '@/features/export/components/export-modal';
 
 const DEFAULT_FILTERS: FilterState = {
   keyword_ids: [],
@@ -25,7 +25,7 @@ export function Dashboard() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState('first_seen_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const { data: status, isLoading: statusLoading } = useMonitorStatus();
   const { data: keywordsData, isLoading: keywordsLoading } = useKeywords();
@@ -59,36 +59,13 @@ export function Dashboard() {
     setPage(1);
   }, [sortBy]);
 
-  const handleExport = useCallback(async () => {
-    setIsExporting(true);
-    try {
-      const params = new URLSearchParams();
-      if (filters.keyword_ids.length > 0) {
-        params.set('keyword_ids', filters.keyword_ids.join(','));
-      }
-      if (filters.start_date) params.set('start_date', filters.start_date);
-      if (filters.end_date) params.set('end_date', filters.end_date);
-      if (filters.search) params.set('search', filters.search);
-      if (filters.new_only) params.set('new_only', 'true');
+  const handleOpenExportModal = useCallback(() => {
+    setIsExportModalOpen(true);
+  }, []);
 
-      const response = await api.get(`/export.csv?${params.toString()}`, {
-        responseType: 'blob',
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `matches-${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export failed:', error);
-    } finally {
-      setIsExporting(false);
-    }
-  }, [filters]);
+  const handleCloseExportModal = useCallback(() => {
+    setIsExportModalOpen(false);
+  }, []);
 
   const handleNavigateToKeywords = useCallback(() => {
     window.location.pathname = '/keywords';
@@ -106,8 +83,14 @@ export function Dashboard() {
       <AppBar
         status={status}
         isLoading={statusLoading}
-        onExport={handleExport}
-        isExporting={isExporting}
+        onExport={handleOpenExportModal}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={handleCloseExportModal}
+        filters={filters}
+        keywords={keywords}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
