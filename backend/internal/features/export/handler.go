@@ -66,16 +66,24 @@ func (h *Handler) ExportCSV(c *gin.Context) {
 
 func parseExportQuery(c *gin.Context) (matches.ListQuery, error) {
         query := matches.ListQuery{
-                Keyword: c.Query("keyword"),
-                Q:       c.Query("q"),
-                Issuer:  c.Query("issuer"),
-                NewOnly: c.Query("new_only") == "true",
+                Keyword:    c.Query("keyword"),
+                KeywordIDs: c.Query("keyword_ids"),
+                Q:          c.Query("q"),
+                Search:     c.Query("search"),
+                Issuer:     c.Query("issuer"),
+                NewOnly:    c.Query("new_only") == "true",
         }
 
         query.Page = 1
         query.PageSize = 1000000
 
-        if dateFrom := c.Query("date_from"); dateFrom != "" {
+        if dateFrom := c.Query("start_date"); dateFrom != "" {
+                t, err := parseDate(dateFrom)
+                if err != nil {
+                        return query, matches.ErrInvalidDateFrom
+                }
+                query.DateFrom = &t
+        } else if dateFrom := c.Query("date_from"); dateFrom != "" {
                 t, err := parseDate(dateFrom)
                 if err != nil {
                         return query, matches.ErrInvalidDateFrom
@@ -83,7 +91,14 @@ func parseExportQuery(c *gin.Context) (matches.ListQuery, error) {
                 query.DateFrom = &t
         }
 
-        if dateTo := c.Query("date_to"); dateTo != "" {
+        if dateTo := c.Query("end_date"); dateTo != "" {
+                t, err := parseDate(dateTo)
+                if err != nil {
+                        return query, matches.ErrInvalidDateTo
+                }
+                endOfDay := t.Add(24*time.Hour - time.Nanosecond)
+                query.DateTo = &endOfDay
+        } else if dateTo := c.Query("date_to"); dateTo != "" {
                 t, err := parseDate(dateTo)
                 if err != nil {
                         return query, matches.ErrInvalidDateTo
