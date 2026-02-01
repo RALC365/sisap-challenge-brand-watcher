@@ -91,7 +91,7 @@ export function Dashboard() {
   }, [filters]);
 
   const handleNavigateToKeywords = useCallback(() => {
-    window.location.href = '/keywords';
+    window.location.pathname = '/keywords';
   }, []);
 
   const keywords = keywordsData?.items ?? [];
