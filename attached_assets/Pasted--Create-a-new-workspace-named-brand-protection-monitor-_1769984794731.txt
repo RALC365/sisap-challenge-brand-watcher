@@ -1,0 +1,149 @@
+
+**Create a new workspace** named `brand-protection-monitor-poc` with two top-level folders: `backend/` and `frontend/`.
+
+Create this backend structure (Screaming Architecture / feature colocation):
+
+```text
+backend/
+  cmd/server/main.go
+  internal/
+    config/
+      config.go
+    db/
+      pool.go
+      migrate.go
+    observability/
+      logger.go
+      middleware.go
+    scheduler/
+      scheduler.go
+    ct/
+      client.go
+      types.go
+    parser/
+      x509_parser.go
+      fingerprint.go
+      normalize.go
+    matcher/
+      matcher.go
+      types.go
+    features/
+      keywords/
+        handler.go
+        service.go
+        repository.go
+        types.go
+        schemas.go
+      monitor/
+        handler.go
+        service.go
+        repository.go
+        types.go
+      matches/
+        handler.go
+        service.go
+        repository.go
+        types.go
+      export/
+        handler.go
+        service.go
+        repository.go
+        types.go
+```
+
+Create this frontend structure (Feature-driven design with strict colocation):
+
+```text
+frontend/
+  src/
+    app/
+      app.tsx
+    main.tsx
+    routes/
+      __root.tsx
+      index.ts
+      redirect.route.tsx
+      dashboard.route.tsx
+      keywords.route.tsx
+    providers/
+      query-client-provider.tsx
+      app-providers.tsx
+    lib/
+      axios.ts
+      env.ts
+      query-client.ts
+      url.ts
+    components/
+      ui/
+        button.tsx
+        input.tsx
+        select.tsx
+        badge.tsx
+        modal.tsx
+        table.tsx
+        toggle.tsx
+        date-range.tsx
+      feedback/
+        error-banner.tsx
+        toast.tsx
+        skeleton.tsx
+    features/
+      app-shell/
+        components/
+          app-shell.tsx
+          app-nav.tsx
+        index.ts
+      monitor/
+        api/
+          use-monitor-status.ts
+        components/
+          status-badge.tsx
+          metric-card.tsx
+          monitor-header.tsx
+          metrics-row.tsx
+        pages/
+          dashboard-page.tsx
+        types/
+          monitor-status.schema.ts
+          monitor.types.ts
+        index.ts
+      keywords/
+        api/
+          use-keywords.ts
+          use-create-keyword.ts
+          use-delete-keyword.ts
+        components/
+          keyword-form.tsx
+          keyword-table.tsx
+        pages/
+          keywords-page.tsx
+        types/
+          keyword.schema.ts
+          keyword.types.ts
+        index.ts
+      matches/
+        api/
+          use-matches.ts
+        components/
+          filter-bar.tsx
+          matches-table.tsx
+          highlight.tsx
+        types/
+          match.schema.ts
+          match.types.ts
+        index.ts
+      export/
+        api/
+          use-export-csv.ts
+        components/
+          export-modal.tsx
+          export-button.tsx
+        types/
+          export.types.ts
+        index.ts
+    styles/
+      tailwind.css
+      tokens.css
+```
+
+---
