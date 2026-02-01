@@ -60,7 +60,14 @@ npm run dev
 - **Frontend**: React 18, TypeScript, TanStack Query, Tailwind CSS, Zod validation
 - **Database**: PostgreSQL 14+
 
+## CT Log Configuration
+- **URL**: https://oak.ct.letsencrypt.org/2026h2 (Oak 2026h2 - Let's Encrypt)
+- **Batch Size**: 100 entries per polling cycle
+- **Poll Interval**: 60 seconds
+
 ## Recent Updates
+- Fixed CT log URL documentation (Oak 2026h2)
+- Fixed UI layout - date range inputs no longer overlap with search
 - Fixed frontend/backend parameter alignment (keyword_ids, search, start_date, end_date, limit)
 - Added Export Modal (SCR-03) with filter chips, 429/500 error handling
 - Added keyword highlighting in matched domain names

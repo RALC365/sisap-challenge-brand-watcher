@@ -36,7 +36,7 @@ The application will be available at:
 ## Features
 
 ### Core Functionality
-- **CT Log Monitoring**: Polls Certificate Transparency logs (Argon 2025h1) for new certificates
+- **CT Log Monitoring**: Polls Certificate Transparency logs (Oak 2026h2 - Let's Encrypt) for new certificates
 - **Keyword Matching**: Case-insensitive matching against certificate CN and SAN fields
 - **Match Deduplication**: Certificates are deduplicated by SHA256 fingerprint + keyword + matched field
 - **First Seen Immutability**: `first_seen_at` timestamp never changes; `last_seen_at` updates on re-detection
@@ -88,13 +88,13 @@ The application will be available at:
 - **No Persistence**: Filters reset on page reload (intentional)
 
 ### CT Log Integration
-- Uses Argon 2025h1 CT log (ct.googleapis.com/logs/us1/argon2025h1)
+- Uses Oak 2026h2 CT log (https://oak.ct.letsencrypt.org/2026h2)
 - Fixed recent batch strategy: fetches last N entries per cycle
 - Graceful error handling for CT log connection issues
 
 ## Limitations / Known Issues
 
-1. **Single CT Log**: Currently monitors only one CT log (Argon 2025h1). Production systems should monitor multiple logs.
+1. **Single CT Log**: Currently monitors only one CT log (Oak 2026h2). Production systems should monitor multiple logs.
 
 2. **No Authentication**: The POC does not include user authentication. Add authentication before production deployment.
 
