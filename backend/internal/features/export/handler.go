@@ -4,7 +4,6 @@ import (
         "fmt"
         "io"
         "net/http"
-        "strconv"
         "time"
 
         "brand-protection-monitor/internal/features/matches"
@@ -16,31 +15,48 @@ import (
 
 type Handler struct {
         service *Service
+        limiter *observability.IPRateLimiter
 }
 
-func NewHandler(pool *pgxpool.Pool, matchService *matches.Service) *Handler {
+func NewHandler(pool *pgxpool.Pool, matchService *matches.Service, limiter *observability.IPRateLimiter) *Handler {
         repo := NewRepository(pool)
         service := NewService(repo, matchService)
-        return &Handler{service: service}
+        return &Handler{
+                service: service,
+                limiter: limiter,
+        }
 }
 
-func (h *Handler) RegisterRoutes(router *gin.Engine, limiter *observability.IPRateLimiter) {
-        router.GET("/export.csv", observability.RateLimitMiddleware(limiter), h.ExportCSV)
+func (h *Handler) RegisterRoutes(router *gin.Engine) {
+        router.GET("/export.csv", h.ExportCSV)
 }
 
 func (h *Handler) ExportCSV(c *gin.Context) {
+        ip := c.ClientIP()
+        if !h.limiter.GetLimiter(ip).Allow() {
+                c.JSON(http.StatusTooManyRequests, ErrorResponse{
+                        Error:   ErrorCodeRateLimited,
+                        Message: "export rate limit exceeded, please try again later",
+                })
+                return
+        }
+
         query, err := parseExportQuery(c)
         if err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{"error": "EXPORT_ERROR", "message": err.Error()})
+                c.JSON(http.StatusBadRequest, ErrorResponse{
+                        Error:   ErrorCodeExportError,
+                        Message: err.Error(),
+                })
                 return
         }
 
         filename := fmt.Sprintf("matches_export_%s.csv", time.Now().Format("20060102_150405"))
-        c.Header("Content-Type", "text/csv")
-        c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+        c.Header("Content-Type", "text/csv; charset=utf-8")
+        c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+        c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 
         c.Stream(func(w io.Writer) bool {
-                _, err := h.service.ExportCSV(c.Request.Context(), query, w)
+                _, err := h.service.ExportCSV(c.Request.Context(), query, c.Writer)
                 if err != nil {
                         return false
                 }
@@ -60,25 +76,20 @@ func parseExportQuery(c *gin.Context) (matches.ListQuery, error) {
         query.PageSize = 1000000
 
         if dateFrom := c.Query("date_from"); dateFrom != "" {
-                t, err := time.Parse(time.RFC3339, dateFrom)
+                t, err := parseDate(dateFrom)
                 if err != nil {
-                        t, err = time.Parse("2006-01-02", dateFrom)
-                        if err != nil {
-                                return query, err
-                        }
+                        return query, matches.ErrInvalidDateFrom
                 }
                 query.DateFrom = &t
         }
 
         if dateTo := c.Query("date_to"); dateTo != "" {
-                t, err := time.Parse(time.RFC3339, dateTo)
+                t, err := parseDate(dateTo)
                 if err != nil {
-                        t, err = time.Parse("2006-01-02", dateTo)
-                        if err != nil {
-                                return query, err
-                        }
+                        return query, matches.ErrInvalidDateTo
                 }
-                query.DateTo = &t
+                endOfDay := t.Add(24*time.Hour - time.Nanosecond)
+                query.DateTo = &endOfDay
         }
 
         sort := c.Query("sort")
@@ -94,5 +105,16 @@ func parseExportQuery(c *gin.Context) (matches.ListQuery, error) {
         return query, nil
 }
 
-var _ = strconv.Atoi
-var _ = observability.ExportRateLimiter
+func parseDate(s string) (time.Time, error) {
+        t, err := time.Parse(time.RFC3339, s)
+        if err == nil {
+                return t, nil
+        }
+
+        t, err = time.Parse("2006-01-02", s)
+        if err == nil {
+                return t, nil
+        }
+
+        return time.Time{}, err
+}

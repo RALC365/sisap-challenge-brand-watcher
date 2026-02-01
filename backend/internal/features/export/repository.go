@@ -31,6 +31,15 @@ func (r *Repository) Create(ctx context.Context, filename string, filterParams F
 	return id, err
 }
 
+func (r *Repository) UpdateStatus(ctx context.Context, id string, status ExportStatus) error {
+	_, err := r.pool.Exec(ctx, `
+		UPDATE exports
+		SET status = $2
+		WHERE id = $1
+	`, id, string(status))
+	return err
+}
+
 func (r *Repository) UpdateCompleted(ctx context.Context, id string, recordCount int) error {
 	_, err := r.pool.Exec(ctx, `
 		UPDATE exports

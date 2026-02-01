@@ -65,8 +65,8 @@ func main() {
 
         matchRepo := matches.NewRepository(pool)
         matchService := matches.NewService(matchRepo)
-        exportHandler := export.NewHandler(pool, matchService)
-        exportHandler.RegisterRoutes(router, observability.ExportRateLimiter)
+        exportHandler := export.NewHandler(pool, matchService, observability.ExportRateLimiter)
+        exportHandler.RegisterRoutes(router)
 
         sched := scheduler.New(logger)
         go sched.Start(ctx)

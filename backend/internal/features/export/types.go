@@ -1,7 +1,7 @@
 package export
 
 import (
-	"encoding/json"
+	"errors"
 	"time"
 
 	"brand-protection-monitor/internal/features/matches"
@@ -11,15 +11,26 @@ type ExportStatus string
 
 const (
 	ExportStatusPending   ExportStatus = "pending"
+	ExportStatusStreaming ExportStatus = "streaming"
 	ExportStatusCompleted ExportStatus = "completed"
 	ExportStatusFailed    ExportStatus = "failed"
+)
+
+var (
+	ErrRateLimited = errors.New("rate limit exceeded")
+)
+
+const (
+	ErrorCodeRateLimited = "RATE_LIMITED"
+	ErrorCodeExportError = "EXPORT_ERROR"
+	ErrorCodeDBError     = "DB_ERROR"
 )
 
 type ExportRecord struct {
 	ID           string
 	Filename     string
 	RecordCount  int
-	FilterParams json.RawMessage
+	FilterParams FilterParams
 	Status       ExportStatus
 	ErrorMessage *string
 	CreatedAt    time.Time
@@ -45,4 +56,9 @@ func FiltersFromMatchQuery(q matches.ListQuery) FilterParams {
 		NewOnly:  q.NewOnly,
 		Sort:     string(q.Sort),
 	}
+}
+
+type ErrorResponse struct {
+	Error   string `json:"error"`
+	Message string `json:"message,omitempty"`
 }
