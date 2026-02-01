@@ -57,5 +57,11 @@ npm run dev
 
 ## Tech Stack
 - **Backend**: Go 1.25, Chi router, PostgreSQL
-- **Frontend**: React 18, TypeScript, TanStack Router, TanStack Query, Tailwind CSS
+- **Frontend**: React 18, TypeScript, TanStack Query, Tailwind CSS, Zod validation
 - **Database**: PostgreSQL 14+
+
+## Recent Updates
+- Added Export Modal (SCR-03) with filter chips, 429/500 error handling
+- Added keyword highlighting in matched domain names
+- Added truncated fingerprint column (hover for full hash)
+- Created README.md with setup, features, design decisions, limitations

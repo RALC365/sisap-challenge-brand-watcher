@@ -3,6 +3,30 @@ import { Badge } from '@/components/ui/badge';
 import { SkeletonTable } from '@/components/feedback/skeleton';
 import type { Match } from '@/lib/schemas';
 
+function HighlightedText({ text, keyword }: { text: string; keyword: string }) {
+  if (!keyword) return <>{text}</>;
+  
+  const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  
+  return (
+    <>
+      {parts.map((part, i) => 
+        regex.test(part) ? (
+          <mark key={i} className="bg-yellow-200 text-yellow-900 px-0.5 rounded">{part}</mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+function truncateFingerprint(hash: string): string {
+  if (hash.length <= 16) return hash;
+  return `${hash.slice(0, 8)}...${hash.slice(-8)}`;
+}
+
 interface MatchesTableProps {
   matches: Match[];
   total: number;
@@ -52,10 +76,12 @@ export function MatchesTable({
       key: 'matched_value',
       header: 'Matched Domain',
       sortable: true,
-      className: 'max-w-xs',
+      className: 'max-w-md',
       render: (match: Match) => (
         <div className="break-words">
-          <span className="font-mono text-sm">{match.matched_value}</span>
+          <span className="font-mono text-sm">
+            <HighlightedText text={match.matched_value} keyword={match.keyword_value} />
+          </span>
           {match.is_new && (
             <Badge variant="success" className="ml-2">New</Badge>
           )}
@@ -67,6 +93,19 @@ export function MatchesTable({
       header: 'Field',
       render: (match: Match) => (
         <Badge variant="info">{match.matched_field.toUpperCase()}</Badge>
+      ),
+    },
+    {
+      key: 'certificate_sha256',
+      header: 'Fingerprint',
+      className: 'max-w-[120px]',
+      render: (match: Match) => (
+        <span 
+          className="font-mono text-xs text-text-muted cursor-help truncate block" 
+          title={match.certificate_sha256}
+        >
+          {truncateFingerprint(match.certificate_sha256)}
+        </span>
       ),
     },
     {
