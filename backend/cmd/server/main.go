@@ -10,7 +10,11 @@ import (
 
         "brand-protection-monitor/internal/config"
         "brand-protection-monitor/internal/db"
+        "brand-protection-monitor/internal/features/export"
         "brand-protection-monitor/internal/features/health"
+        "brand-protection-monitor/internal/features/keywords"
+        "brand-protection-monitor/internal/features/matches"
+        "brand-protection-monitor/internal/features/monitor"
         "brand-protection-monitor/internal/observability"
         "brand-protection-monitor/internal/scheduler"
 
@@ -44,13 +48,25 @@ func main() {
         router.Use(observability.RecoveryMiddleware(logger))
         router.Use(observability.AccessLogMiddleware(logger))
 
+        pool := db.GetPool()
+
         health.RegisterRoutes(router)
+
+        monitorHandler := monitor.NewHandler(pool)
+        monitorHandler.RegisterRoutes(router)
+
+        keywordsHandler := keywords.NewHandler(pool)
+        keywordsHandler.RegisterRoutes(router)
 
         matchesGroup := router.Group("/matches")
         matchesGroup.Use(observability.RateLimitMiddleware(observability.MatchesRateLimiter))
+        matchesHandler := matches.NewHandler(pool)
+        matchesHandler.RegisterRoutes(matchesGroup)
 
-        exportGroup := router.Group("/export")
-        exportGroup.Use(observability.RateLimitMiddleware(observability.ExportRateLimiter))
+        matchRepo := matches.NewRepository(pool)
+        matchService := matches.NewService(matchRepo)
+        exportHandler := export.NewHandler(pool, matchService)
+        exportHandler.RegisterRoutes(router, observability.ExportRateLimiter)
 
         sched := scheduler.New(logger)
         go sched.Start(ctx)
