@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { StatusBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { MonitorStatus } from '@/lib/schemas';
@@ -24,7 +25,42 @@ function formatLastRun(dateString: string | null): string {
   return date.toLocaleDateString();
 }
 
+function useCountdown(lastRunAt: string | null, pollIntervalSeconds: number) {
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!lastRunAt || pollIntervalSeconds <= 0) {
+      setSecondsRemaining(null);
+      return;
+    }
+
+    const calculateRemaining = () => {
+      const lastRun = new Date(lastRunAt).getTime();
+      const nextRun = lastRun + (pollIntervalSeconds * 1000);
+      const now = Date.now();
+      const remaining = Math.max(0, Math.ceil((nextRun - now) / 1000));
+      return remaining;
+    };
+
+    setSecondsRemaining(calculateRemaining());
+
+    const interval = setInterval(() => {
+      const remaining = calculateRemaining();
+      setSecondsRemaining(remaining);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastRunAt, pollIntervalSeconds]);
+
+  return secondsRemaining;
+}
+
 export function AppBar({ status, isLoading, onExport }: AppBarProps) {
+  const secondsRemaining = useCountdown(
+    status?.last_run_at ?? null, 
+    status?.poll_interval_seconds ?? 60
+  );
+
   return (
     <header className="sticky top-0 z-20 bg-surface-card shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-4">
@@ -42,9 +78,21 @@ export function AppBar({ status, isLoading, onExport }: AppBarProps) {
 
           <div className="flex items-center gap-4">
             {status && (
-              <span className="text-sm text-text-muted">
-                Last run: {formatLastRun(status.last_run_at)}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-text-muted">
+                  Last run: {formatLastRun(status.last_run_at)}
+                </span>
+                {secondsRemaining !== null && secondsRemaining > 0 && (
+                  <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-text-secondary">
+                    Next: {secondsRemaining}s
+                  </span>
+                )}
+                {secondsRemaining === 0 && status.state !== 'running' && (
+                  <span className="text-sm font-mono bg-blue-100 px-2 py-1 rounded text-blue-700 animate-pulse">
+                    Polling...
+                  </span>
+                )}
+              </div>
             )}
             <Button
               onClick={onExport}

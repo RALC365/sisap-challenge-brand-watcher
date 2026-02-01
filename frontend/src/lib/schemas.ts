@@ -44,6 +44,7 @@ export const MonitorStatusSchema = z.object({
   last_success_at: z.string().nullable(),
   last_error_code: z.string().nullable(),
   last_error_message: z.string().nullable(),
+  poll_interval_seconds: z.number(),
   metrics_last_run: z.object({
     processed_count: z.number(),
     match_count: z.number(),
