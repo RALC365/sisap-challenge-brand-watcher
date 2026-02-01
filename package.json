@@ -1,0 +1,19 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@tanstack/react-router": "^1.157.18",
+    "axios": "^1.13.4",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.11"
+  }
+}

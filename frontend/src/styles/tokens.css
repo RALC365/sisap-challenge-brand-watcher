@@ -1,2 +1,36 @@
 :root {
+  /* Color Tokens */
+  --color-primary: #2563EB;
+  --color-success: #16A34A;
+  --color-warning: #F59E0B;
+  --color-error: #DC2626;
+
+  /* Surface Tokens */
+  --surface-page: #F9FAFB;
+  --surface-card: #FFFFFF;
+
+  /* Text Tokens */
+  --text-primary: #111827;
+  --text-muted: #6B7280;
+
+  /* Typography */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Base styles */
+html {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background-color: var(--surface-page);
+}
+
+/* Typography utilities */
+.text-wrap {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+h1, h2, h3, h4, h5, h6, p, span, div {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
