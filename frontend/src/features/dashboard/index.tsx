@@ -134,6 +134,31 @@ export function Dashboard() {
             )}
           </>
         )}
+
+        <div className="mt-8 p-6 bg-white rounded-xl border border-gray-200">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">How It Works</h2>
+          <div className="grid md:grid-cols-2 gap-6 text-sm text-text-secondary">
+            <div>
+              <h3 className="font-medium text-text-primary mb-2">1. Certificate Monitoring</h3>
+              <p>This system connects to a public Certificate Transparency (CT) log and polls for new SSL/TLS certificates every 60 seconds. It fetches the latest batch of certificates from the log.</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-text-primary mb-2">2. Keyword Matching</h3>
+              <p>Each certificate's domain names (Common Name and Subject Alternative Names) are checked against your configured keywords. Matches are highlighted and stored for review.</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-text-primary mb-2">3. Brand Protection</h3>
+              <p>When a certificate contains one of your keywords (e.g., your brand name), it may indicate phishing attempts or domain abuse. Review matches to identify potential threats.</p>
+            </div>
+            <div>
+              <h3 className="font-medium text-text-primary mb-2">4. Export & Analysis</h3>
+              <p>Use the filters to narrow down results by keyword, date range, or search terms. Export matching certificates to CSV for further analysis or reporting.</p>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100 text-xs text-text-muted">
+            <strong>Tip:</strong> Click on a keyword chip to filter matches. The "Next" timer shows when the next polling cycle will run. New matches are marked with a green "New" badge.
+          </div>
+        </div>
       </main>
     </div>
   );

@@ -67,7 +67,7 @@ export function FilterBar({ keywords, filters, onFiltersChange, isLoading }: Fil
       <div className="flex flex-col xl:flex-row gap-4">
         <div className="flex-1 min-w-0">
           <label className="label">Keywords</label>
-          <div className="flex flex-wrap gap-2 min-h-[38px] p-2 border border-gray-200 rounded-md bg-white">
+          <div className="flex flex-wrap gap-2 min-h-[38px] max-h-[120px] overflow-y-auto p-2 border border-gray-200 rounded-md bg-white">
             {keywords.length === 0 ? (
               <span className="text-sm text-text-muted">No keywords configured</span>
             ) : (
