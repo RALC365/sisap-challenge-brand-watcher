@@ -9,22 +9,6 @@ interface AppBarProps {
   onExport: () => void;
 }
 
-function formatLastRun(dateString: string | null): string {
-  if (!dateString) return 'Never';
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  
-  return date.toLocaleDateString();
-}
-
 function useCountdown(lastRunAt: string | null, pollIntervalSeconds: number) {
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
 
@@ -79,12 +63,9 @@ export function AppBar({ status, isLoading, onExport }: AppBarProps) {
           <div className="flex items-center gap-4">
             {status && (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-text-muted">
-                  Last run: {formatLastRun(status.last_run_at)}
-                </span>
                 {secondsRemaining !== null && secondsRemaining > 0 && (
                   <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded text-text-secondary">
-                    Next: {secondsRemaining}s
+                    Next Run: {secondsRemaining}s
                   </span>
                 )}
                 {secondsRemaining === 0 && status.state !== 'running' && (

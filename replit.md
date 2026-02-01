@@ -66,10 +66,18 @@ npm run dev
 - **Poll Interval**: 60 seconds
 
 ## Recent Updates
+- Removed "Last run" label from app bar (redundant with timer)
+- Changed timer label from "Next" to "Next Run"
+- Added 32 keywords for testing (brands, social media, crypto, banking, phishing terms)
+- Added "How It Works" instructional section on dashboard
+- Added scrollable keywords container (max-height 120px)
+- Unified README.md with deployment URL, installation, methodology (The AI Machine), and technical decisions
 - Fixed CT log URL documentation (Oak 2026h2)
 - Fixed UI layout - date range inputs no longer overlap with search
 - Fixed frontend/backend parameter alignment (keyword_ids, search, start_date, end_date, limit)
 - Added Export Modal (SCR-03) with filter chips, 429/500 error handling
 - Added keyword highlighting in matched domain names
 - Added truncated fingerprint column (hover for full hash)
-- Created README.md with setup, features, design decisions, limitations
+
+## Deployment
+- **Live URL**: https://brand-watcher-challenge.replit.app
