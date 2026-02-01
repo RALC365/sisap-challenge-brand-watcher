@@ -28,13 +28,16 @@ func (h *Handler) RegisterRoutes(matchesGroup *gin.RouterGroup) {
 func (h *Handler) List(c *gin.Context) {
 	query, err := parseListQuery(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_QUERY", "message": err.Error()})
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   ErrorCodeInvalidQuery,
+			Message: err.Error(),
+		})
 		return
 	}
 
 	response, err := h.service.List(c.Request.Context(), query)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "DB_ERROR"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: ErrorCodeDBError})
 		return
 	}
 
@@ -52,7 +55,7 @@ func parseListQuery(c *gin.Context) (ListQuery, error) {
 	if pageStr := c.Query("page"); pageStr != "" {
 		page, err := strconv.Atoi(pageStr)
 		if err != nil || page < 1 {
-			return query, err
+			return query, ErrInvalidPage
 		}
 		query.Page = page
 	} else {
@@ -61,8 +64,11 @@ func parseListQuery(c *gin.Context) (ListQuery, error) {
 
 	if pageSizeStr := c.Query("page_size"); pageSizeStr != "" {
 		pageSize, err := strconv.Atoi(pageSizeStr)
-		if err != nil || (pageSize != 10 && pageSize != 25 && pageSize != 50) {
-			return query, err
+		if err != nil {
+			return query, ErrInvalidPageSize
+		}
+		if pageSize != 10 && pageSize != 25 && pageSize != 50 {
+			return query, ErrInvalidPageSize
 		}
 		query.PageSize = pageSize
 	} else {
@@ -70,38 +76,49 @@ func parseListQuery(c *gin.Context) (ListQuery, error) {
 	}
 
 	if dateFrom := c.Query("date_from"); dateFrom != "" {
-		t, err := time.Parse(time.RFC3339, dateFrom)
+		t, err := parseDate(dateFrom)
 		if err != nil {
-			t, err = time.Parse("2006-01-02", dateFrom)
-			if err != nil {
-				return query, err
-			}
+			return query, ErrInvalidDateFrom
 		}
 		query.DateFrom = &t
 	}
 
 	if dateTo := c.Query("date_to"); dateTo != "" {
-		t, err := time.Parse(time.RFC3339, dateTo)
+		t, err := parseDate(dateTo)
 		if err != nil {
-			t, err = time.Parse("2006-01-02", dateTo)
-			if err != nil {
-				return query, err
-			}
+			return query, ErrInvalidDateTo
 		}
-		query.DateTo = &t
+		endOfDay := t.Add(24*time.Hour - time.Nanosecond)
+		query.DateTo = &endOfDay
 	}
 
-	sort := c.Query("sort")
-	switch sort {
+	sortStr := c.Query("sort")
+	switch sortStr {
 	case "last_seen_desc":
 		query.Sort = SortLastSeenDesc
 	case "domain_asc":
 		query.Sort = SortDomainAsc
-	default:
+	case "first_seen_desc", "":
 		query.Sort = SortFirstSeenDesc
+	default:
+		return query, ErrInvalidSort
 	}
 
 	return query, nil
+}
+
+func parseDate(s string) (time.Time, error) {
+	t, err := time.Parse(time.RFC3339, s)
+	if err == nil {
+		return t, nil
+	}
+
+	t, err = time.Parse("2006-01-02", s)
+	if err == nil {
+		return t, nil
+	}
+
+	return time.Time{}, err
 }
 
 var _ = observability.MatchesRateLimiter

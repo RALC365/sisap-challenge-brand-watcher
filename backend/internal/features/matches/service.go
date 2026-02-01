@@ -23,6 +23,13 @@ func (s *Service) List(ctx context.Context, query ListQuery) (*ListResponse, err
 		query.Sort = SortFirstSeenDesc
 	}
 
+	if query.NewOnly {
+		lastSuccessTime, err := s.repo.GetLastSuccessTime(ctx)
+		if err == nil && lastSuccessTime != nil {
+			query.LastSuccessTime = lastSuccessTime
+		}
+	}
+
 	rows, total, err := s.repo.List(ctx, query)
 	if err != nil {
 		return nil, err
@@ -40,6 +47,13 @@ func (s *Service) List(ctx context.Context, query ListQuery) (*ListResponse, err
 }
 
 func (s *Service) StreamAll(ctx context.Context, query ListQuery, fn func(Match) error) error {
+	if query.NewOnly {
+		lastSuccessTime, err := s.repo.GetLastSuccessTime(ctx)
+		if err == nil && lastSuccessTime != nil {
+			query.LastSuccessTime = lastSuccessTime
+		}
+	}
+
 	return s.repo.StreamAll(ctx, query, func(row MatchRow) error {
 		return fn(rowToMatch(row))
 	})

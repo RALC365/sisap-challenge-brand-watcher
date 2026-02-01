@@ -1,6 +1,9 @@
 package matches
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 type SortOrder string
 
@@ -10,56 +13,70 @@ const (
 	SortDomainAsc     SortOrder = "domain_asc"
 )
 
+var (
+	ErrInvalidPage     = errors.New("page must be a positive integer")
+	ErrInvalidPageSize = errors.New("page_size must be 10, 25, or 50")
+	ErrInvalidSort     = errors.New("sort must be first_seen_desc, last_seen_desc, or domain_asc")
+	ErrInvalidDateFrom = errors.New("date_from must be a valid date (YYYY-MM-DD or RFC3339)")
+	ErrInvalidDateTo   = errors.New("date_to must be a valid date (YYYY-MM-DD or RFC3339)")
+)
+
+const (
+	ErrorCodeInvalidQuery = "INVALID_QUERY"
+	ErrorCodeDBError      = "DB_ERROR"
+)
+
 type Match struct {
-	ID              string    `json:"id"`
-	KeywordID       string    `json:"keyword_id"`
-	KeywordValue    string    `json:"keyword_value"`
-	CertSHA256      string    `json:"certificate_sha256"`
-	MatchedField    string    `json:"matched_field"`
-	MatchedValue    string    `json:"matched_value"`
-	DomainName      *string   `json:"domain_name"`
-	IssuerCN        *string   `json:"issuer_cn"`
-	IssuerOrg       *string   `json:"issuer_org"`
-	SubjectCN       *string   `json:"subject_cn"`
-	SubjectOrg      *string   `json:"subject_org"`
-	NotBefore       *time.Time `json:"not_before"`
-	NotAfter        *time.Time `json:"not_after"`
-	FirstSeenAt     time.Time `json:"first_seen_at"`
-	LastSeenAt      time.Time `json:"last_seen_at"`
-	IsNew           bool      `json:"is_new"`
-	CtLogIndex      int64     `json:"ct_log_index"`
+	ID           string     `json:"id"`
+	KeywordID    string     `json:"keyword_id"`
+	KeywordValue string     `json:"keyword_value"`
+	CertSHA256   string     `json:"certificate_sha256"`
+	MatchedField string     `json:"matched_field"`
+	MatchedValue string     `json:"matched_value"`
+	DomainName   *string    `json:"domain_name"`
+	IssuerCN     *string    `json:"issuer_cn"`
+	IssuerOrg    *string    `json:"issuer_org"`
+	SubjectCN    *string    `json:"subject_cn"`
+	SubjectOrg   *string    `json:"subject_org"`
+	NotBefore    *time.Time `json:"not_before"`
+	NotAfter     *time.Time `json:"not_after"`
+	FirstSeenAt  time.Time  `json:"first_seen_at"`
+	LastSeenAt   time.Time  `json:"last_seen_at"`
+	IsNew        bool       `json:"is_new"`
+	CtLogIndex   int64      `json:"ct_log_index"`
 }
 
 type MatchRow struct {
-	ID              string
-	KeywordID       string
-	KeywordValue    string
-	CertSHA256      string
-	MatchedField    string
-	MatchedValue    string
-	DomainName      *string
-	IssuerCN        *string
-	IssuerOrg       *string
-	SubjectCN       *string
-	SubjectOrg      *string
-	NotBefore       *time.Time
-	NotAfter        *time.Time
-	FirstSeenAt     time.Time
-	LastSeenAt      time.Time
-	IsNew           bool
-	CtLogIndex      int64
+	ID           string
+	KeywordID    string
+	KeywordValue string
+	CertSHA256   string
+	MatchedField string
+	MatchedValue string
+	DomainName   *string
+	IssuerCN     *string
+	IssuerOrg    *string
+	SubjectCN    *string
+	SubjectOrg   *string
+	NotBefore    *time.Time
+	NotAfter     *time.Time
+	FirstSeenAt  time.Time
+	LastSeenAt   time.Time
+	IsNew        bool
+	CtLogIndex   int64
 }
 
 type ListQuery struct {
-	Page     int
-	PageSize int
-	Keyword  string
-	Q        string
-	Issuer   string
-	DateFrom *time.Time
-	DateTo   *time.Time
-	NewOnly  bool
-	Sort     SortOrder
+	Page            int
+	PageSize        int
+	Keyword         string
+	Q               string
+	Issuer          string
+	DateFrom        *time.Time
+	DateTo          *time.Time
+	NewOnly         bool
+	LastSuccessTime *time.Time
+	Sort            SortOrder
 }
 
 type ListResponse struct {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -14,6 +15,17 @@ type Repository struct {
 
 func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
+}
+
+func (r *Repository) GetLastSuccessTime(ctx context.Context) (*time.Time, error) {
+	var lastSuccessAt *time.Time
+	err := r.pool.QueryRow(ctx, `
+		SELECT last_success_at FROM monitor_state WHERE id = 1
+	`).Scan(&lastSuccessAt)
+	if err != nil {
+		return nil, err
+	}
+	return lastSuccessAt, nil
 }
 
 func (r *Repository) List(ctx context.Context, query ListQuery) ([]MatchRow, int, error) {
@@ -51,8 +63,10 @@ func (r *Repository) List(ctx context.Context, query ListQuery) ([]MatchRow, int
 		argIndex++
 	}
 
-	if query.NewOnly {
-		baseQuery += " AND mc.is_new = TRUE"
+	if query.NewOnly && query.LastSuccessTime != nil {
+		baseQuery += fmt.Sprintf(" AND mc.first_seen_at >= $%d", argIndex)
+		args = append(args, *query.LastSuccessTime)
+		argIndex++
 	}
 
 	countQuery := "SELECT COUNT(*) " + baseQuery
@@ -134,8 +148,10 @@ func (r *Repository) StreamAll(ctx context.Context, query ListQuery, fn func(Mat
 		argIndex++
 	}
 
-	if query.NewOnly {
-		baseQuery += " AND mc.is_new = TRUE"
+	if query.NewOnly && query.LastSuccessTime != nil {
+		baseQuery += fmt.Sprintf(" AND mc.first_seen_at >= $%d", argIndex)
+		args = append(args, *query.LastSuccessTime)
+		argIndex++
 	}
 
 	selectQuery := `SELECT mc.id, mc.keyword_id, k.keyword, mc.certificate_sha256, mc.matched_field, mc.matched_value,
