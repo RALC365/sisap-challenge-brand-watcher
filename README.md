@@ -89,7 +89,7 @@ createdb brand_monitor
 ```bash
 cd backend
 go mod tidy
-go run cmd/server/main.go
+go run ./cmd/server/main.go
 ```
 
 The backend API will be available at `http://localhost:8080`
@@ -108,7 +108,7 @@ The frontend will be available at `http://localhost:5000`
 
 ```bash
 # Terminal 1 - Backend
-cd backend && go run cmd/server/main.go
+cd backend && go run ./cmd/server/main.go
 
 # Terminal 2 - Frontend
 cd frontend && npm run dev
@@ -171,6 +171,8 @@ Final PoC
 ### 3.5 GPT Agents Used
 
 The AI Machine was executed through a **strict, sequential chain of specialized GPT agents**. Each GPT consumes the validated output of the previous one. Skipping or reordering agents is explicitly forbidden in this process.
+
+> **Note:** All generated Source-of-Truth documents (PDFs) from each GPT agent can be found in the [`/GPT_Outputs`](./GPT_Outputs) folder.
 
 #### Execution Order
 
