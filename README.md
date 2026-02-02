@@ -4,6 +4,8 @@ A Certificate Transparency (CT) log monitoring system for brand protection. This
 
 **Live Demo:** [https://brand-watcher-challenge.replit.app](https://brand-watcher-challenge.replit.app)
 
+**Repository:** [https://github.com/RALC365/sisap-challenge-brand-watcher](https://github.com/RALC365/sisap-challenge-brand-watcher)
+
 ---
 
 ## Table of Contents
@@ -11,11 +13,23 @@ A Certificate Transparency (CT) log monitoring system for brand protection. This
 1. [Project Overview](#1-project-overview)
 2. [Installation & Local Setup](#2-installation--local-setup)
 3. [Methodology: The AI Machine](#3-methodology-the-ai-machine)
+   - [3.1 Purpose](#31-purpose)
+   - [3.2 Alignment with Tech Challenge Requirements](#32-alignment-with-tech-challenge-requirements)
+   - [3.3 Core Principles](#33-core-principles)
+   - [3.4 Conceptual Flow](#34-conceptual-flow)
+   - [3.5 GPT Agents Used](#35-gpt-agents-used)
+   - [3.6 Human Validation and Ownership](#36-human-validation-and-ownership)
 4. [Technical Decisions](#4-technical-decisions)
+   - [4.1 Why Go for the Backend](#41-why-go-for-the-backend)
+   - [4.2 Why PostgreSQL](#42-why-postgresql)
+   - [4.3 Why React + TypeScript + Tailwind](#43-why-react--typescript--tailwind)
+   - [4.4 Why Not Store All Certificates](#44-why-not-store-all-certificates)
+   - [4.5 Why AI-First Instead of Manual Design](#45-why-ai-first-instead-of-manual-design)
 5. [Features](#5-features)
 6. [API Reference](#6-api-reference)
 7. [Limitations](#7-limitations)
 8. [Tech Stack](#8-tech-stack)
+9. [Conclusion](#9-conclusion)
 
 ---
 
@@ -48,8 +62,8 @@ Organizations can configure keywords (brand names, product names, etc.) and the 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/brand-protection-monitor.git
-cd brand-protection-monitor
+git clone https://github.com/RALC365/sisap-challenge-brand-watcher.git
+cd sisap-challenge-brand-watcher
 ```
 
 ### Step 2: Set Up Environment Variables
@@ -104,18 +118,30 @@ cd frontend && npm run dev
 
 ## 3. Methodology: The AI Machine
 
-This section describes **"The AI Machine"**, an **AI-first engineering process** used to design and implement this PoC.
+This section describes **"The AI Machine"**, an **AI-first engineering process** used to design and implement the *Brand Protection Monitor (PoC)* required by the SISAP Tech Challenge.
 
 ### 3.1 Purpose
 
-The goal of this methodology is to:
+The goal of this documentation is to:
 
 - Explicitly document **how AI was used**, as allowed and encouraged by the challenge
 - Explain **each GPT agent involved**, its objective, inputs, and outputs
-- Describe the **technical and architectural decisions** taken, including trade-offs and rationale
+- Describe the **technical and architectural decisions** taken along the way, including trade-offs and rationale
 - Demonstrate **ownership, understanding, and human validation** of all AI-generated artifacts
 
-### 3.2 Core Principles
+This document is intended to complement the source code and the generated PDFs, and to satisfy the **"Communication"** and **"Design Decisions / Ambiguities"** evaluation criteria of the challenge.
+
+### 3.2 Alignment with Tech Challenge Requirements
+
+The *Tech Challenge* explicitly states that:
+
+- **AI usage is permitted and encouraged**
+- The candidate must **understand, validate, and explain** any AI-generated output
+- A detailed `README.md` describing **design decisions, trade-offs, and limitations** is required
+
+> This process was intentionally designed to exceed those expectations by making AI usage **explicit, structured, auditable, and human-validated**.
+
+### 3.3 Core Principles
 
 **The AI Machine** is an **AI-first, human-validated delivery pipeline**:
 
@@ -124,7 +150,7 @@ The goal of this methodology is to:
 3. **Single-source-of-truth documents** produced per domain
 4. **Zero ambiguity tolerance** — all assumptions must be resolved explicitly
 
-### 3.3 Conceptual Flow
+### 3.4 Conceptual Flow
 
 ```
 Problem Definition (Tech Challenge)
@@ -142,29 +168,174 @@ Code Generation (Replit)
 Final PoC
 ```
 
-### 3.4 GPT Agents Used
+### 3.5 GPT Agents Used
 
-The AI Machine was executed through a **strict, sequential chain of specialized GPT agents**:
+The AI Machine was executed through a **strict, sequential chain of specialized GPT agents**. Each GPT consumes the validated output of the previous one. Skipping or reordering agents is explicitly forbidden in this process.
 
-| Order | Agent | Responsibility | Output |
-|-------|-------|----------------|--------|
-| 1 | **Normalizer** | Parse requirements, eliminate ambiguity, define scope boundaries | Normalized problem definition |
-| 2 | **PRD Generator** | Translate requirements into product language, define features and constraints | PRD (PDF) |
-| 3 | **User Stories** | Convert PRD into explicit, testable user stories with acceptance criteria | User Stories (PDF) |
-| 4A | **UX/UI Architect** | Define visual tokens, UI components, screen layouts, and UX behavior | UX/UI Specification (PDF) |
-| 4B | **Database Architect** | Design PostgreSQL schema with deduplication and auditability | Database Schema (PDF) |
-| 5A | **Tech Lead** | Define CT log polling strategy, API contracts, error handling | Technical Bible (PDF) |
-| 5B | **Infra/Frontend** | Define frontend structure, routing, state management | Frontend Architecture (PDF) |
-| 6 | **Prompt Generator** | Generate execution-ready prompts for Replit | Replit Prompts |
+#### Execution Order
 
-### 3.5 Human Validation
+```
+1. Normalizer
+2. PRD
+3. User Stories
+4A. UX/UI
+4B. Database
+5A. Tech Lead
+5B. Infra
+6. Prompt Generator
+```
+
+Each GPT has a **non-overlapping responsibility**, clear inputs, and a concrete output artifact (PDF or prompt set).
+
+---
+
+#### GPT 1 — Normalizer
+
+**Objective:** Normalize and lock the problem space before any design or implementation decisions.
+
+**Primary Responsibilities:**
+- Parse the Tech Challenge requirements
+- Eliminate ambiguity
+- Define scope boundaries (in-scope / out-of-scope)
+- Produce resolved assumptions as binding constraints
+
+**Inputs:** Tech Challenge PDF
+
+**Outputs:** Normalized problem definition, Explicit assumptions, Scope lock (PoC boundaries)
+
+**Why this GPT exists:** This agent prevents all downstream GPTs from making implicit assumptions or inventing requirements.
+
+---
+
+#### GPT 2 — PRD Generator
+
+**Objective:** Generate a **formal Product Requirements Document (PRD)** from the normalized context.
+
+**Primary Responsibilities:**
+- Translate normalized requirements into product language
+- Define features, non-goals, and constraints
+- Establish acceptance criteria at the product level
+
+**Inputs:** Normalized context (GPT 1 output)
+
+**Outputs:** PRD — Source of Truth (PDF)
+
+**Why this GPT exists:** Separates *problem understanding* from *solution design* and ensures product intent is explicit.
+
+---
+
+#### GPT 3 — User Stories Generator
+
+**Objective:** Convert the PRD into **explicit, testable user stories**.
+
+**Primary Responsibilities:**
+- Produce user stories with acceptance criteria
+- Define happy paths and edge cases
+- Ensure full traceability back to the PRD
+
+**Inputs:** PRD (GPT 2 output)
+
+**Outputs:** User Stories — Source of Truth (PDF)
+
+**Why this GPT exists:** Prevents feature gaps and provides a bridge between product intent and technical execution.
+
+---
+
+#### GPT 4A — UX/UI Architect
+
+**Objective:** Define a **binding UX/UI specification** with zero visual or interaction ambiguity.
+
+**Primary Responsibilities:**
+- Define visual tokens (colors, typography)
+- Define allowed UI components
+- Define screen layouts and UI states
+- Specify UX behavior for loading, empty, and error states
+
+**Inputs:** PRD, User Stories
+
+**Outputs:** UX/UI Source of Truth (PDF)
+
+**Why this GPT exists:** Locks the frontend experience before any code is written.
+
+---
+
+#### GPT 4B — Database Architect
+
+**Objective:** Design a **production-grade PostgreSQL schema** aligned with product and UX semantics.
+
+**Primary Responsibilities:**
+- Model persistence rules
+- Define soft deletes and deduplication
+- Ensure auditability and observability
+
+**Inputs:** PRD, User Stories
+
+**Outputs:** PostgreSQL Source of Truth (PDF)
+
+**Why this GPT exists:** Ensures data integrity and long-term correctness before backend logic is implemented.
+
+---
+
+#### GPT 5A — Tech Lead (Backend Orchestration)
+
+**Objective:** Define **how the system actually runs** at the backend level.
+
+**Primary Responsibilities:**
+- Define CT log polling strategy
+- Define scheduling and concurrency rules
+- Define REST API contracts
+- Classify and handle error conditions
+
+**Inputs:** PRD, User Stories, Database Source of Truth
+
+**Outputs:** Technical Bible / Backend Source of Truth (PDF)
+
+**Why this GPT exists:** Bridges architecture and implementation with explicit execution rules.
+
+---
+
+#### GPT 5B — Infra / Frontend Architecture
+
+**Objective:** Define the **frontend and infrastructure architecture** needed to implement the PoC.
+
+**Primary Responsibilities:**
+- Define frontend project structure
+- Define routing and state management rules
+- Define API consumption patterns
+
+**Inputs:** UX/UI Source of Truth, Technical Bible
+
+**Outputs:** Frontend Architecture Source of Truth (PDF)
+
+**Why this GPT exists:** Ensures the frontend is scalable, testable, and aligned with backend contracts.
+
+---
+
+#### GPT 6 — Prompt Generator
+
+**Objective:** Generate **high-quality, execution-ready prompts** for Replit.
+
+**Primary Responsibilities:**
+- Translate all Source-of-Truth documents into prompts
+- Ensure prompts are deterministic and modular
+- Optimize prompts for AI-assisted coding
+
+**Inputs:** All previous GPT outputs
+
+**Outputs:** Replit-ready prompts (Markdown / text)
+
+**Why this GPT exists:** Transforms design and architecture into executable AI instructions.
+
+---
+
+### 3.6 Human Validation and Ownership
 
 All AI outputs were:
 
-- Reviewed line-by-line
-- Constrained with explicit rules
-- Adjusted when misaligned with requirements
-- Fully understood and explainable by the author
+- **Reviewed line-by-line**
+- **Constrained with explicit rules**
+- **Adjusted when misaligned with requirements**
+- **Fully understood and explainable by the author**
 
 **AI was used as a multiplier, not a replacement.**
 
@@ -172,52 +343,74 @@ All AI outputs were:
 
 ## 4. Technical Decisions
 
-### 4.1 Backend: Go
+### 4.1 Why Go for the Backend
+
+| Rationale |
+|-----------|
+| Required by the challenge |
+| Strong concurrency model for CT polling |
+| Deterministic performance |
+
+**Additional Decisions:**
 
 | Decision | Rationale |
 |----------|-----------|
-| Go language | Required by challenge; strong concurrency model for CT polling; deterministic performance |
 | Screaming Architecture | Features organized by domain (keywords, matches, monitor, export) for clarity |
 | Chi Router | Lightweight, idiomatic Go HTTP router |
 | Repository Pattern | Database access abstracted for testability |
 | Upsert Strategy | ON CONFLICT for deduplication, preserving first_seen_at |
 
-### 4.2 Database: PostgreSQL
+### 4.2 Why PostgreSQL
+
+| Rationale |
+|-----------|
+| Required by the challenge |
+| Strong relational guarantees |
+| Advanced indexing (GIN, trigram) |
+
+**Additional Decisions:**
 
 | Decision | Rationale |
 |----------|-----------|
-| PostgreSQL | Required by challenge; strong relational guarantees |
 | GIN/Trigram Indexes | Efficient substring matching for keyword search |
 | Soft Deletes | Keywords are never hard deleted; preserves match history |
 | Enum Types | Type safety for matched_field (cn, san, both) |
 
-### 4.3 Frontend: React + TypeScript
+### 4.3 Why React + TypeScript + Tailwind
+
+| Rationale |
+|-----------|
+| Required by the challenge |
+| Fast iteration for PoC |
+| Strong type safety and UI consistency |
+
+**Additional Decisions:**
 
 | Decision | Rationale |
 |----------|-----------|
-| React 18 + TypeScript | Required by challenge; type safety reduces bugs |
 | TanStack Query | Server state management with automatic refetching |
-| Tailwind CSS | Fast iteration with utility-first CSS |
 | Zod Validation | All API responses parsed through schemas before rendering |
 | Feature Colocation | Components, hooks, and API calls grouped by feature |
 
-### 4.4 CT Log Integration
+### 4.4 Why Not Store All Certificates
 
-| Decision | Rationale |
-|----------|-----------|
-| Oak 2026h2 Log | Let's Encrypt CT log with high certificate volume |
-| Fixed Recent Batch | Fetches last N entries per cycle (configurable) |
-| 60-second Poll Interval | Balance between freshness and API load |
-| Match-only Storage | Only certificates with keyword matches are persisted |
+| Rationale |
+|-----------|
+| Explicitly allowed by PoC scope |
+| Reduces storage and complexity |
+| Focuses system on actionable signal (matches) |
 
-### 4.5 Why AI-First Development
+Only certificates that match configured keywords are persisted. This is a deliberate design decision to optimize for the PoC use case.
+
+### 4.5 Why AI-First Instead of Manual Design
 
 | Benefit | Description |
 |---------|-------------|
 | Faster Exploration | AI explores complex design spaces quickly |
 | Explicit Documentation | Forces all decisions to be documented |
 | Reduced Assumptions | Hidden assumptions are surfaced and resolved |
-| Human Review | Ensures correctness and alignment with requirements |
+
+Human review ensured correctness and alignment.
 
 ---
 
@@ -232,6 +425,7 @@ All AI outputs were:
 - Keyword highlighting in matched domain names
 - Truncated fingerprint display (hover for full hash)
 - Countdown timer showing time until next polling cycle
+- "How It Works" instructional section
 
 ### 5.2 Keyword Management (SCR-02)
 
@@ -262,7 +456,10 @@ All AI outputs were:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/` | Root health check |
 | GET | `/health` | Health check |
+| GET | `/healthz` | Kubernetes-style health check |
+| GET | `/readyz` | Readiness check with DB verification |
 | GET | `/monitor/status` | Monitor state and metrics |
 | GET | `/keywords` | List all keywords |
 | POST | `/keywords` | Create a new keyword |
@@ -300,6 +497,8 @@ These limitations are **intentional** and aligned with the PoC scope:
 | Single Instance | No horizontal scaling support; would need distributed locking |
 | Memory Usage | Large exports may consume significant memory |
 
+All limitations were **intentional** and aligned with the challenge scope.
+
 ---
 
 ## 8. Tech Stack
@@ -309,7 +508,7 @@ These limitations are **intentional** and aligned with the PoC scope:
 | Technology | Purpose |
 |------------|---------|
 | Go 1.25 | Programming language |
-| Chi | HTTP router |
+| Gin | HTTP router |
 | pgx | PostgreSQL driver |
 | Zap | Structured logging |
 
@@ -334,11 +533,26 @@ These limitations are **intentional** and aligned with the PoC scope:
 
 ---
 
+## 9. Conclusion
+
+The **AI Machine** demonstrates:
+
+- **Strong architectural thinking**
+- **Responsible AI usage**
+- **Clear communication**
+- **Production-grade design under time constraints**
+
+This approach reflects how modern engineering teams can safely and effectively integrate AI into real-world delivery pipelines.
+
+---
+
 ## Author
 
 **Richardson Cárcamo**
 
 Full Stack Engineering Challenge — Brand Protection Monitor (PoC)
+
+Challenge Owner: SISAP (Recruitment Process)
 
 ---
 
